@@ -1,10 +1,15 @@
-package dev.yatsukha
+package dev.yatsukha.perlin
 
-import perlin._
+import java.awt.image.BufferedImage
+import java.awt.Color
+import java.io.File
+import javax.imageio.ImageIO
 
-object Main {
+object Perlin {
   import scala.util.Random
-  import perlin.conversions._
+  import conversions._
+
+  //TODO: def generateNoise
 
   def main(args: Array[String]): Unit = {
     if (args.length != 3) {
@@ -25,10 +30,9 @@ object Main {
     }
 
     val rnd = new Random(System.currentTimeMillis)
-    val txt = Array('!', '~', '-', '\\', '_', '|', '/')
 
     val gradients = 
-      (0 until rows).map(x => (0 until cols).map(y => (x, y)).zip(random.gradientStream(rnd)))
+      (0 until rows).map(x => (0 until cols).map(y => (x, y)).zip(generators.gradientStream(rnd)))
 
     val noise = 
       (0 until ((rows - 1) * ticks))
@@ -37,7 +41,7 @@ object Main {
           val xBounds = (x.toInt, (x + 1).toInt)
           val yBounds = (y.toInt, (y + 1).toInt)
 
-          val interpWeight = (x - xBounds._1, y - yBounds._1)
+          val interpWeight = (x - xBounds._1.toDouble, y - yBounds._1.toDouble)
 
           (
             ((x - xBounds._1, y - yBounds._1) * gradients(xBounds._1)(yBounds._1)._2,
@@ -50,18 +54,35 @@ object Main {
           
         }))
 
+    def merge(noise: Seq[Seq[Double]])(point: (Int, Int), scale: Int): Double = {
+      var counter = scale
+      var value = 0.0
+
+      while (counter != 0) {
+        value = value + (noise(point._1 / counter)(point._2 / counter) + 1.0) * counter.toDouble
+        counter = counter / 2
+      }
+
+      value / scale.toDouble
+    }
+
     var extremes = (-1.0, 1.0)
+    val img = new BufferedImage(noise.head.length, noise.length, BufferedImage.TYPE_INT_RGB)
   
-    for (x <- noise.indices) {
+    for (x <- noise.indices)
       for (y <- noise(x).indices) {
         val n = noise(x)(y)
         extremes = (extremes._1 max n, extremes._2 min n)
-        print(txt(((n + 1.0) * (txt.length.toDouble / 2.0)).toInt))
+        val clr = (200.0 *  merge(noise)((x, y), 64)).toInt - 256
+        //println(clr)
+        if (clr < 0 || clr > 255) {
+          println(clr)
+          return
+        }
+        img.setRGB(y, x, new Color(clr, clr, clr).getRGB)
       }
 
-      println()
-    }
-
+    ImageIO.write(img, "jpg", new File("test.jpg"))
     println(s"extremes: $extremes")
   }
 }
