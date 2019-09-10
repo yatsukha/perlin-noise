@@ -21,9 +21,7 @@ package object generators {
     : IndexedSeq[IndexedSeq[(Double, Double)]] = {
 
     val stream = gradientStream(rng)
-    Vector((for (i <- 0 until dim._1) yield stream.take(dim._2).toVector): _*)
+    Vector((for (i <- 0 until dim._1) yield stream.drop(i * dim._2).take(dim._2).toVector): _*)
   }
   
 }
-
-
