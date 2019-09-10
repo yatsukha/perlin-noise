@@ -1,4 +1,4 @@
-package dev.yatsukha.perlin
+package dev.yatsukha
 
 sealed case class Point[A: Fractional](p: (A, A)) {
   import Fractional.Implicits._
@@ -11,9 +11,10 @@ sealed case class Point[A: Fractional](p: (A, A)) {
   }
 
   def *(other: Point[A]): A =
-    x * other.x + this.y * other.y
+    x * other.x + y * other.y
 }
 
 package object conversions {
-  implicit def tupleToPoint[A: Fractional](p: (A, A)): Point[A] = Point(p)
+  implicit def tupleToPoint[A: Fractional](p: (A, A)): Point[A] = 
+    Point(p)
 }
