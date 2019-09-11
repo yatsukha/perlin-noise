@@ -1,17 +1,25 @@
 package dev.yatsukha
 
 object Main extends App {
-  if (args.length != 3) {
-    println("args: rows columns ticks")
+  if (args.length != 4) {
+    println("args: rows columns ticks filename")
     System.exit(-1)
   }
 
-  val r = args(0).toInt
-  val c = args(1).toInt
-  val t = args(2).toInt
+  val (r, c, t, f) = try {
+    (args(0).toInt, args(1).toInt, args(2).toInt, args(3))
+  } catch {
+    case _: Throwable => { 
+      println("invalid args"); 
+      System.exit(-1); 
+
+      (() => ???)() // hackerman
+    }
+  }
 
   println(s"image resolution: ${c * t}x${r * t}")
 
+  // ( ͡◉ ͜ʖ ͡◉)
   val gf = generators.gradientField(
     new scala.util.Random(System.currentTimeMillis), 
     (r + 1, c + 1)
@@ -25,20 +33,27 @@ object Main extends App {
           (0 until (c * t))
             .map(_.toDouble / t.toDouble)
             .map(y => noise.noise(gf, (x, y)))
-            .map(util.exaggerate(_))
+            // expand the average [0.3, 0.7] signal energy to full range
+            .map(util.exaggerate(_)) 
+            //.map(_ + 1) // move to [0, 2]
+            //.map(_ / 2) // scale to [0, 1]
       )
 
-  val image = new Image(c * t, r * t)
+  val image = new Image(perlin.head.length, perlin.length)
 
   for (x <- perlin.indices)
-    for (y <- perlin(x).indices) {
-      val eq = x.toDouble * 5.0 / perlin.length.toDouble +
-               y.toDouble * 2.0 / perlin(x).length.toDouble +
-               0.25 * util.turbulence(perlin, 32)(x, y)
+    for (y <- perlin.head.indices) {
+      val color = 0.7 *
+        util.marble(
+          noise.turbulence(perlin, 32)(x, y)
+        )(
+          x.toDouble / perlin.length, y.toDouble / perlin.head.length
+        )() + 0.3
 
-      val color = math.abs(math.sin(eq * Math.PI)).toFloat
+      // sand colors
       image.set(x, y)((212.0 * color).toInt, (125.0 * color).toInt, (65.0 * color).toInt)
     }
 
-  image.write("test.jpg")
+  image.write(f)
+  println(s"saved to $f")
 }
