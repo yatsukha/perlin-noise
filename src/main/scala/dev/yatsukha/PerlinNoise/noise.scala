@@ -64,8 +64,9 @@ package object noise {
 
       counter = counter / 2
     }
-
-    math.min(math.max(value / s.toDouble, -1.0), 1.0)
+    
+    value / (2 * s.toDouble)
+    //math.min(math.max(value / s.toDouble, -1.0), 1.0)
   }
 
 }

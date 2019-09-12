@@ -10,7 +10,7 @@ package object util {
 
   def marble(noise: Double)
             (xy: (Double, Double))
-            (noiseStrength: Double = 0.25, period: (Double, Double) = (5.0, 10.0)): Double =
+            (noiseStrength: Double = 2.0, period: (Double, Double) = (5.0, 10.0)): Double =
     (1 + math.sin((noise * noiseStrength + xy._1 * period._1 + xy._2 * period._2) * math.Pi)) / 2
 
 }
